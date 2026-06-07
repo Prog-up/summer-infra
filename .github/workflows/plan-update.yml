@@ -1,0 +1,38 @@
+name: Plan update → Discord
+
+# Summarises plan changes and posts them to Discord on every push that
+# touches the plan/ folder. Configure two repo secrets:
+#   DISCORD_WEBHOOK_URL  — a channel webhook (Server Settings → Integrations)
+#   ANTHROPIC_API_KEY    — optional; enables AI summaries instead of a raw diff
+on:
+  push:
+    paths:
+      - "plan/**.html"
+  workflow_dispatch: {}
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history for diffing)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Summarise plan changes and post to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: node scripts/summarize-push.mjs

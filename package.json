@@ -1,0 +1,20 @@
+{
+  "name": "summer-infra",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Planning environment for a self-managed Kubernetes / IaC summer lab: versioned HTML plan + Discord bot that summarises updates and powers brainstorming.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "bot": "node bot/src/index.mjs",
+    "deploy-commands": "node bot/src/deploy-commands.mjs",
+    "summarize": "node scripts/summarize-push.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.102.0",
+    "discord.js": "^14.26.4",
+    "node-html-parser": "^7.1.0"
+  }
+}

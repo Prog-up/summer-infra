@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dossier projet — Infra Cloud self-managed sur Infomaniak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f6f2ea; --paper-2:#efe9dd; --ink:#1c2024; --ink-soft:#4b525a;
+    --line:#d8cfbe; --petrol:#13565c; --petrol-d:#0c3d42; --clay:#bd5d36;
+    --blue:#2b5dd1; --green:#0f7a45; --red:#b03a2e; --purple:#6b4fd1; --amber:#c47f12;
+    --maxw:1080px; --prose:760px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans",sans-serif; font-size:16px; line-height:1.62;
+    background-image:radial-gradient(var(--line) 0.6px, transparent 0.6px);
+    background-size:22px 22px;
+  }
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px}
+  .prose{max-width:var(--prose)}
+  h1,h2,h3{font-family:"Fraunces",serif; line-height:1.08; letter-spacing:-0.01em; color:var(--ink)}
+  code,.mono{font-family:"IBM Plex Mono",monospace}
+
+  /* ---- COVER ---- */
+  header.cover{
+    background:linear-gradient(135deg,var(--petrol-d),var(--petrol) 62%,#1c6b66);
+    color:#f3efe6; padding:74px 0 60px; position:relative; overflow:hidden;
+    border-bottom:4px solid var(--clay);
+  }
+  header.cover::after{content:""; position:absolute; inset:0;
+    background-image:linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px),
+      linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px);
+    background-size:38px 38px; opacity:.5; pointer-events:none}
+  .kicker{font-family:"IBM Plex Mono"; font-size:12.5px; letter-spacing:.32em;
+    text-transform:uppercase; color:#9fdcd2; margin-bottom:18px}
+  header.cover h1{font-size:clamp(34px,5.4vw,62px); font-weight:900; color:#fff; margin:0 0 14px; max-width:16ch}
+  header.cover p.lead{max-width:62ch; font-size:18px; color:#dfeae5; margin:0}
+  .meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:30px; position:relative; z-index:2}
+  .chip{font-family:"IBM Plex Mono"; font-size:12px; background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.22); color:#eaf3f0; padding:7px 12px; border-radius:999px}
+
+  /* ---- SECTIONS ---- */
+  section{padding:46px 0; border-bottom:1px solid var(--line)}
+  .secnum{font-family:"IBM Plex Mono"; font-size:13px; color:var(--clay); letter-spacing:.2em; font-weight:600}
+  h2{font-size:clamp(24px,3.2vw,34px); font-weight:600; margin:6px 0 18px}
+  h3{font-size:19px; font-weight:600; margin:26px 0 8px; color:var(--petrol-d)}
+  p{margin:0 0 14px}
+  strong{font-weight:600; color:var(--ink)}
+  a{color:var(--petrol); text-decoration:underline; text-underline-offset:2px}
+
+  ul{margin:0 0 16px; padding:0; list-style:none}
+  ul li{position:relative; padding-left:24px; margin:0 0 10px; max-width:var(--prose)}
+  ul li::before{content:"▸"; position:absolute; left:2px; top:0; color:var(--clay); font-size:13px; top:2px}
+  li b{color:var(--petrol-d)}
+
+  .callout{max-width:var(--prose); background:var(--paper-2); border-left:4px solid var(--clay);
+    padding:16px 20px; border-radius:0 10px 10px 0; margin:18px 0; font-size:15px}
+  .callout .tag{font-family:"IBM Plex Mono"; font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--clay); display:block; margin-bottom:6px}
+
+  /* ---- FIGURES ---- */
+  figure{margin:30px 0; background:#fff; border:1px solid var(--line); border-radius:14px;
+    padding:20px 20px 8px; box-shadow:0 14px 34px -22px rgba(20,84,90,.5)}
+  figure svg{width:100%; height:auto; display:block}
+  figcaption{font-family:"IBM Plex Mono"; font-size:12.5px; color:var(--ink-soft);
+    padding:10px 4px 8px; border-top:1px dashed var(--line); margin-top:8px}
+  figcaption b{color:var(--petrol-d)}
+
+  /* ---- TABLE / GRID ---- */
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin:18px 0}
+  .card{background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px 18px}
+  .card h4{font-family:"Fraunces"; font-size:17px; margin:0 0 6px; color:var(--petrol-d)}
+  .card .role{font-family:"IBM Plex Mono"; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--clay)}
+  .card p{font-size:14px; margin:6px 0 0; color:var(--ink-soft)}
+
+  .phase{display:flex; gap:16px; margin:14px 0; max-width:var(--prose)}
+  .phase .n{flex:0 0 42px; height:42px; border-radius:10px; background:var(--petrol); color:#fff;
+    font-family:"Fraunces"; font-weight:700; font-size:20px; display:flex; align-items:center; justify-content:center}
+  .phase .body{flex:1}
+  .phase h4{margin:2px 0 4px; font-size:16px; color:var(--ink); font-family:"IBM Plex Sans"; font-weight:600}
+  .phase p{font-size:14.5px; margin:0; color:var(--ink-soft)}
+
+  .twocol{columns:2; column-gap:34px; max-width:var(--prose)}
+  @media(max-width:640px){ .twocol{columns:1} header.cover{padding:54px 0 44px} }
+
+  footer{padding:34px 0 60px; color:var(--ink-soft); font-size:13px}
+  .legendrow{display:flex; flex-wrap:wrap; gap:18px; font-family:"IBM Plex Mono"; font-size:11.5px; margin-top:6px}
+  .legendrow span{display:inline-flex; align-items:center; gap:6px}
+  .sw{width:22px; height:0; border-top-width:2px; border-top-style:solid}
+  .bx{width:13px; height:13px; border-radius:3px; border:1.5px solid}
+
+  @media print{
+    body{background:#fff} header.cover::after,body{background-image:none}
+    figure{box-shadow:none; break-inside:avoid} section{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<header class="cover">
+  <div class="wrap">
+    <div class="kicker">Dossier de projet · Lab éducatif · Juin 2026</div>
+    <h1>Infrastructure Cloud souveraine, auto-gérée de bout en bout</h1>
+    <p class="lead">Monter, opérer et casser une plateforme Kubernetes complète sur le Public Cloud d'Infomaniak — control plane compris — pilotée intégralement en Infrastructure-as-Code et GitOps. Objectif : manipuler pour apprendre, le plus large possible, sans dépasser un crédit d'essai.</p>
+    <div class="meta">
+      <span class="chip">Provider · Infomaniak (OpenStack, CH)</span>
+      <span class="chip">Cluster · kubeadm self-managed</span>
+      <span class="chip">IaC · Terraform + Ansible</span>
+      <span class="chip">CD · ArgoCD (GitOps)</span>
+      <span class="chip">IAM · Keycloak (OIDC)</span>
+      <span class="chip">Agentique · MCP + A2A</span>
+      <span class="chip">Budget · CHF 300 / 3 mois</span>
+      <span class="chip">Équipe · 2 personnes</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- 01 -->
+<section id="contexte">
+  <div class="prose">
+    <div class="secnum">01 — CONTEXTE & OBJECTIFS</div>
+    <h2>Apprendre en construisant, pas en consommant</h2>
+    <p>Le projet est un laboratoire à but pédagogique mené à deux. La règle directrice : <strong>tout ce qui est instructif doit rester sous notre contrôle</strong>. On écarte donc volontairement le Kubernetes managé, qui masque le cœur de l'administration (bootstrap, etcd, PKI, apiserver), au profit d'un cluster monté à la main avec kubeadm sur des VM brutes.</p>
+    <p>L'ambition n'est pas « un cluster qui tourne », mais une <strong>infrastructure assez complète pour exercer un maximum de domaines</strong> : provisioning déclaratif, CI/CD sécurisée, GitOps, observabilité, sécurité en profondeur, scaling, et gestion des secrets de production.</p>
+    <h3>Compétences visées</h3>
+    <ul>
+      <li><b>Cluster</b> — bootstrap kubeadm, etcd (backup/restore), PKI, CNI installé soi-même, intégration cloud OpenStack.</li>
+      <li><b>IaC / GitOps</b> — Terraform + Ansible pour l'infra, ArgoCD pour l'état du cluster, reconstruction reproductible à chaque session.</li>
+      <li><b>Sécurité</b> — runtime eBPF, policies d'admission, chaîne supply-chain signée, et gestion des secrets centralisée.</li>
+      <li><b>Exploitation</b> — observabilité 3 piliers, scaling horizontal pods et nœuds, sauvegarde/restauration.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 02 -->
+<section id="contraintes">
+  <div class="prose">
+    <div class="secnum">02 — CONTRAINTES & RÉALITÉ BUDGÉTAIRE</div>
+    <h2>Un crédit unique, un modèle éphémère</h2>
+    <p>Le levier financier est le crédit d'essai du Public Cloud : <strong>CHF 300 à consommer en 3 mois</strong> (≈ 315 €, et non « 300 € »). Deux corrections de cadrage, vérifiées en amont :</p>
+    <ul>
+      <li>Le <b>programme étudiant</b> d'Infomaniak offre de l'hébergement web et de la messagerie — <b>aucun crédit Public Cloud</b>. Le plan « 600 € via deux comptes étudiants » n'existe pas.</li>
+      <li>Empiler le crédit d'essai sur deux comptes est possible mais flirte avec les CGU (un essai par organisation). Inutile, de toute façon : voir ci-dessous.</li>
+    </ul>
+    <div class="callout">
+      <span class="tag">Le pivot qui rend le projet finançable</span>
+      Les instances éteintes ne sont pas facturées (hors stockage, IPv4 publique et GPU). Couplé au tout-IaC, l'infra devient <strong>éphémère</strong> : <code>terraform apply</code> avant une session, <code>terraform destroy</code> après. L'état durable (state, dumps SQL, snapshots etcd) vit dans l'Object Storage S3, à quelques centimes. Coût réel estimé : <strong>~CHF 30–35/mois</strong>, soit ~CHF 100 sur trois mois. Un seul crédit suffit pour deux personnes.
+    </div>
+    <p>Le risque budgétaire numéro un n'est pas le dimensionnement : c'est <strong>un nœud oublié allumé un week-end</strong>. Un <code>destroy</code> en fin de session, scripté dans un Makefile, est la principale discipline à tenir.</p>
+  </div>
+</section>
+
+<!-- 03 -->
+<section id="decisions">
+  <div class="prose">
+    <div class="secnum">03 — DÉCISIONS D'ARCHITECTURE</div>
+    <h2>Pourquoi self-managed, et ce que le terrain impose</h2>
+    <p>Le Public Cloud d'Infomaniak repose sur <strong>OpenStack</strong>, et le projet OpenStack sous-jacent est accessible — on peut donc piloter VM, réseaux, volumes et load balancers via le provider Terraform OpenStack, exactement comme pour un cluster monté à la main.</p>
+    <p>Trois propriétés du terrain orientent la conception :</p>
+    <ul>
+      <li><b>CNI Cilium</b> — qu'on installe nous-mêmes : on hérite des NetworkPolicy L3/L4 et L7, de Hubble (observabilité réseau) et de Tetragon (runtime eBPF).</li>
+      <li><b>Octavia</b> comme load balancer — exposé via le composant <code>cloud-provider-openstack</code> (OCCM) qu'on câble manuellement, tout comme <b>Cinder CSI</b> pour les volumes persistants.</li>
+      <li><b>Object Storage S3</b> — le socle de persistance qui survit aux <code>destroy</code> : state Terraform, snapshots etcd, backups de base, artefacts CI.</li>
+    </ul>
+    <p>Conséquence directe : ce que le managé offrait « clé en main » (control plane gratuit, autoscaling de nœuds, intégration cloud) devient ici un <strong>exercice</strong>. C'est le but.</p>
+  </div>
+
+  <figure aria-label="Schéma global d'architecture">
+    <svg viewBox="0 0 1320 900" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans',sans-serif">
+      <defs>
+        <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1c2024"/></marker>
+        <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2b5dd1"/></marker>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b03a2e"/></marker>
+        <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0f7a45"/></marker>
+        <marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b4fd1"/></marker>
+      </defs>
+      <rect x="0" y="0" width="1320" height="900" fill="#ffffff"/>
+      <!-- sidebar -->
+      <rect x="20" y="60" width="206" height="520" rx="10" fill="#f1ede4" stroke="#b9b0a0" stroke-width="1.4"/>
+      <text x="123" y="84" font-size="13" font-weight="700" fill="#3a3f45" text-anchor="middle">Pilotage</text>
+      <rect x="36" y="98" width="174" height="56" rx="8" fill="#fff" stroke="#9aa0a6"/><text x="123" y="120" font-size="12.5" font-weight="600" fill="#1c2024" text-anchor="middle">2 collègues</text><text x="123" y="138" font-size="10.5" fill="#6b7280" text-anchor="middle">git · tf · ansible</text>
+      <rect x="36" y="170" width="174" height="56" rx="8" fill="#fff" stroke="#2b5dd1"/><text x="123" y="192" font-size="12.5" font-weight="600" fill="#2b5dd1" text-anchor="middle">Terraform / Tofu</text><text x="123" y="210" font-size="10.5" fill="#6b7280" text-anchor="middle">provider OpenStack</text>
+      <rect x="36" y="242" width="174" height="66" rx="8" fill="#fff" stroke="#b03a2e"/><text x="123" y="264" font-size="12.5" font-weight="600" fill="#b03a2e" text-anchor="middle">Ansible</text><text x="123" y="282" font-size="10.5" fill="#6b7280" text-anchor="middle">kubeadm init/join</text><text x="123" y="297" font-size="10.5" fill="#6b7280" text-anchor="middle">Cilium · CCM</text>
+      <rect x="36" y="506" width="174" height="56" rx="8" fill="#fff" stroke="#9aa0a6"/><text x="123" y="528" font-size="12.5" font-weight="600" fill="#1c2024" text-anchor="middle">🌐 Internet</text><text x="123" y="546" font-size="10.5" fill="#6b7280" text-anchor="middle">utilisateurs</text>
+
+      <!-- cloud -->
+      <rect x="246" y="60" width="1054" height="810" rx="14" fill="#f6f9ff" stroke="#2b5dd1" stroke-width="2"/>
+      <text x="264" y="84" font-size="13.5" font-weight="700" fill="#2b5dd1">Infomaniak Public Cloud — projet OpenStack · réseau privé · 1 région</text>
+
+      <!-- S3 -->
+      <rect x="1102" y="100" width="182" height="752" rx="10" fill="#f0ecff" stroke="#6b4fd1" stroke-width="1.5"/>
+      <text x="1193" y="124" font-size="12.5" font-weight="700" fill="#5b3fc0" text-anchor="middle">Object Storage S3</text>
+      <text x="1193" y="148" font-size="11" fill="#374151" text-anchor="middle">tfstate</text><text x="1193" y="168" font-size="11" fill="#374151" text-anchor="middle">snapshots etcd</text><text x="1193" y="188" font-size="11" fill="#374151" text-anchor="middle">backups Postgres</text><text x="1193" y="208" font-size="11" fill="#374151" text-anchor="middle">registry · artefacts</text><text x="1193" y="208" font-size="11" fill="#374151" text-anchor="middle"></text>
+      <text x="1193" y="240" font-size="10" fill="#6b7280" text-anchor="middle">persiste entre</text><text x="1193" y="254" font-size="10" fill="#6b7280" text-anchor="middle">destroy / apply</text>
+
+      <!-- socle -->
+      <rect x="266" y="100" width="816" height="128" rx="10" fill="#fff4e6" stroke="#c47f12" stroke-width="1.6"/>
+      <text x="282" y="122" font-size="12.5" font-weight="700" fill="#9a630a">● Socle permanent (always-on)</text>
+      <rect x="286" y="134" width="430" height="82" rx="8" fill="#fff" stroke="#c47f12"/>
+      <text x="501" y="156" font-size="13.5" font-weight="700" fill="#1c2024" text-anchor="middle">VM GitLab CE</text>
+      <text x="501" y="175" font-size="10.5" fill="#374151" text-anchor="middle">Repos · CI/CD · Container Registry · Runner</text>
+      <text x="501" y="192" font-size="10.5" fill="#374151" text-anchor="middle">Postgres interne (cible Ansible) · TLS</text>
+      <text x="501" y="209" font-size="10" fill="#9a630a" text-anchor="middle">CI : build → scan → sign → push → bump tag GitOps</text>
+      <rect x="730" y="134" width="338" height="38" rx="8" fill="#fff" stroke="#c47f12"/><text x="899" y="158" font-size="12" font-weight="600" fill="#1c2024" text-anchor="middle">IPv4 flottante → GitLab</text>
+      <rect x="730" y="180" width="338" height="36" rx="8" fill="#fff" stroke="#9aa0a6"/><text x="899" y="203" font-size="11" fill="#6b7280" text-anchor="middle">DNS · externalDNS · Let's Encrypt</text>
+
+      <!-- cluster -->
+      <rect x="266" y="248" width="816" height="600" rx="10" fill="#eafaf1" stroke="#0f7a45" stroke-width="1.7" stroke-dasharray="8 5"/>
+      <text x="282" y="270" font-size="12.5" font-weight="700" fill="#0f7a45">▦ Cluster Kubernetes auto-géré — kubeadm (éphémère : apply / destroy)</text>
+
+      <!-- control plane -->
+      <rect x="286" y="284" width="368" height="166" rx="9" fill="#fdecec" stroke="#b03a2e" stroke-width="2"/>
+      <text x="470" y="306" font-size="12.5" font-weight="700" fill="#b03a2e" text-anchor="middle">Control plane — VM (que TU opères)</text>
+      <rect x="300" y="318" width="166" height="36" rx="6" fill="#fff" stroke="#b03a2e"/><text x="383" y="341" font-size="11" font-weight="600" fill="#1c2024" text-anchor="middle">kube-apiserver</text>
+      <rect x="474" y="318" width="166" height="36" rx="6" fill="#fff" stroke="#b03a2e"/><text x="557" y="341" font-size="11" font-weight="600" fill="#1c2024" text-anchor="middle">etcd</text>
+      <rect x="300" y="362" width="166" height="36" rx="6" fill="#fff" stroke="#b03a2e"/><text x="383" y="385" font-size="11" font-weight="600" fill="#1c2024" text-anchor="middle">controller-mgr</text>
+      <rect x="474" y="362" width="166" height="36" rx="6" fill="#fff" stroke="#b03a2e"/><text x="557" y="385" font-size="11" font-weight="600" fill="#1c2024" text-anchor="middle">scheduler</text>
+      <rect x="300" y="406" width="166" height="36" rx="6" fill="#fff" stroke="#b03a2e"/><text x="383" y="429" font-size="11" font-weight="600" fill="#1c2024" text-anchor="middle">PKI / certs</text>
+      <rect x="474" y="406" width="166" height="36" rx="6" fill="#fff" stroke="#b03a2e"/><text x="557" y="429" font-size="11" font-weight="600" fill="#1c2024" text-anchor="middle">containerd</text>
+
+      <!-- lb / ingress -->
+      <rect x="674" y="284" width="178" height="72" rx="8" fill="#fff" stroke="#0f7a45"/><text x="763" y="314" font-size="12" font-weight="700" fill="#1c2024" text-anchor="middle">Octavia LB</text><text x="763" y="333" font-size="10" fill="#6b7280" text-anchor="middle">créé par OCCM</text>
+      <rect x="872" y="284" width="194" height="72" rx="8" fill="#fff" stroke="#0f7a45"/><text x="969" y="314" font-size="12" font-weight="700" fill="#1c2024" text-anchor="middle">ingress-nginx</text><text x="969" y="333" font-size="10" fill="#6b7280" text-anchor="middle">+ cert-manager</text>
+      <rect x="674" y="372" width="392" height="60" rx="8" fill="#eef6ff" stroke="#2b5dd1"/><text x="870" y="394" font-size="11.5" font-weight="700" fill="#2b5dd1" text-anchor="middle">Intégration OpenStack (câblée par toi)</text><text x="870" y="414" font-size="10.5" fill="#374151" text-anchor="middle">cloud-provider-openstack : Cinder CSI · Octavia OCCM</text>
+
+      <!-- cilium bar -->
+      <rect x="286" y="462" width="780" height="32" rx="7" fill="#dfeefe" stroke="#2b5dd1"/><text x="676" y="483" font-size="11.5" font-weight="700" fill="#2b5dd1" text-anchor="middle">Cilium CNI (auto-installé) + Hubble — NetworkPolicy L3/L4/L7, default-deny</text>
+
+      <!-- workers -->
+      <rect x="286" y="504" width="780" height="332" rx="9" fill="#fff" stroke="#0f7a45" stroke-width="1.5"/>
+      <text x="676" y="526" font-size="12.5" font-weight="700" fill="#1c2024" text-anchor="middle">Worker nodes — VM (2×, kubeadm join · scaling manuel/IaC)</text>
+      <text x="676" y="543" font-size="10" fill="#6b7280" text-anchor="middle">stack déployée par GitOps (ArgoCD), pas par Terraform</text>
+      <!-- pills -->
+      <g font-size="11.5" font-weight="700" text-anchor="middle">
+      <rect x="300" y="556" width="178" height="48" rx="8" fill="#d7f0e3" stroke="#0f7a45"/><text x="389" y="577" fill="#0f5c34">ArgoCD</text><text x="389" y="593" font-size="9.5" font-weight="400" fill="#374151">GitOps</text>
+      <rect x="492" y="556" width="178" height="48" rx="8" fill="#d7f0e3" stroke="#0f7a45"/><text x="581" y="577" fill="#0f5c34">Prometheus/Grafana</text><text x="581" y="593" font-size="9.5" font-weight="400" fill="#374151">+ Loki + Tempo</text>
+      <rect x="684" y="556" width="178" height="48" rx="8" fill="#d7f0e3" stroke="#0f7a45"/><text x="773" y="577" fill="#0f5c34">CloudNativePG</text><text x="773" y="593" font-size="9.5" font-weight="400" fill="#374151">Postgres → S3</text>
+      <rect x="876" y="556" width="178" height="48" rx="8" fill="#d7f0e3" stroke="#0f7a45"/><text x="965" y="577" fill="#0f5c34">external-secrets</text><text x="965" y="593" font-size="9.5" font-weight="400" fill="#374151">← Vault</text>
+      <rect x="300" y="616" width="178" height="48" rx="8" fill="#fdecec" stroke="#b03a2e"/><text x="389" y="637" fill="#b03a2e">Tetragon / Falco</text><text x="389" y="653" font-size="9.5" font-weight="400" fill="#374151">runtime eBPF</text>
+      <rect x="492" y="616" width="178" height="48" rx="8" fill="#fdecec" stroke="#b03a2e"/><text x="581" y="637" fill="#b03a2e">Kyverno</text><text x="581" y="653" font-size="9.5" font-weight="400" fill="#374151">admission · verify</text>
+      <rect x="684" y="616" width="178" height="48" rx="8" fill="#fdecec" stroke="#b03a2e"/><text x="773" y="637" fill="#b03a2e">trivy-operator</text><text x="773" y="653" font-size="9.5" font-weight="400" fill="#374151">scan continu</text>
+      <rect x="876" y="616" width="178" height="48" rx="8" fill="#d7f0e3" stroke="#0f7a45"/><text x="965" y="637" fill="#0f5c34">Vos apps</text><text x="965" y="653" font-size="9.5" font-weight="400" fill="#374151">PSA restricted</text>
+      </g>
+      <rect x="300" y="676" width="754" height="44" rx="8" fill="#f6f8fa" stroke="#9aa0a6"/><text x="677" y="697" font-size="11" font-weight="700" fill="#3a3f45" text-anchor="middle">Scaling</text><text x="677" y="712" font-size="10" fill="#374151" text-anchor="middle">Pods : HPA + KEDA · Nœuds : Terraform → kubeadm join (manuel) → Cluster API (auto, plus tard)</text>
+      <rect x="300" y="730" width="754" height="44" rx="8" fill="#fdecec" stroke="#b03a2e"/><text x="677" y="751" font-size="10.5" font-weight="700" fill="#b03a2e" text-anchor="middle">Sécurité : déploiement pull-based — le runner CI n'a jamais le kubeconfig</text><text x="677" y="766" font-size="10" fill="#374151" text-anchor="middle">secrets via external-secrets/SOPS · kube-bench CIS · audit etcd & API sous ton contrôle</text>
+
+      <!-- arrows -->
+      <path d="M210,124 C238,128 254,148 284,160" fill="none" stroke="#1c2024" stroke-width="1.5" marker-end="url(#a)"/><text x="232" y="118" font-size="9.5" fill="#1c2024">git push</text>
+      <path d="M210,198 C238,232 240,300 284,330" fill="none" stroke="#2b5dd1" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#ab)"/><text x="214" y="270" font-size="9" fill="#2b5dd1">VM·réseau·LB</text>
+      <path d="M210,275 C240,310 252,360 284,376" fill="none" stroke="#b03a2e" stroke-width="1.7" stroke-dasharray="6 4" marker-end="url(#ar)"/><text x="214" y="335" font-size="9" fill="#b03a2e">bootstrap</text>
+      <path d="M210,528 C320,490 580,400 674,348" fill="none" stroke="#1c2024" stroke-width="1.5" marker-end="url(#a)"/><text x="300" y="470" font-size="9.5" fill="#1c2024">trafic public</text>
+      <path d="M852,320 L870,320" fill="none" stroke="#1c2024" stroke-width="1.5" marker-end="url(#a)"/>
+      <path d="M969,356 C969,440 967,500 965,554" fill="none" stroke="#1c2024" stroke-width="1.3" marker-end="url(#a)"/>
+      <path d="M610,216 C650,400 520,520 460,554" fill="none" stroke="#0f7a45" stroke-width="1.4" marker-end="url(#ag)"/><text x="548" y="402" font-size="9" fill="#0f7a45">pull images</text>
+      <path d="M389,554 C368,420 408,236 458,222" fill="none" stroke="#0f7a45" stroke-width="1.4" marker-end="url(#ag)"/><text x="344" y="400" font-size="9" fill="#0f7a45">pull GitOps</text>
+      <path d="M1054,580 C1085,560 1090,440 1102,360" fill="none" stroke="#6b4fd1" stroke-width="1.4" marker-end="url(#ap)"/>
+      <path d="M640,330 C900,330 1000,270 1102,238" fill="none" stroke="#6b4fd1" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#ap)"/><text x="900" y="300" font-size="9" fill="#6b4fd1">snapshot etcd</text>
+      <path d="M1068,168 L1102,176" fill="none" stroke="#6b4fd1" stroke-width="1.4" marker-end="url(#ap)"/>
+    </svg>
+    <figcaption><b>Fig. 1</b> — Architecture globale. Le control plane (rouge) redevient une zone opérée par l'équipe ; le cluster (vert, pointillé) est éphémère ; le socle GitLab + S3 (orange/violet) persiste.</figcaption>
+  </figure>
+  <div class="legendrow prose" style="max-width:none">
+    <span><span class="sw" style="border-color:#1c2024"></span> flux runtime</span>
+    <span><span class="sw" style="border-color:#2b5dd1; border-top-style:dashed"></span> provisioning (Terraform)</span>
+    <span><span class="sw" style="border-color:#b03a2e; border-top-style:dashed"></span> bootstrap (Ansible/kubeadm)</span>
+    <span><span class="sw" style="border-color:#6b4fd1"></span> stockage / backup S3</span>
+    <span><span class="bx" style="border-color:#b03a2e; background:#fdecec"></span> opéré par toi / sécurité</span>
+    <span><span class="bx" style="border-color:#0f7a45; background:#eafaf1"></span> éphémère</span>
+    <span><span class="bx" style="border-color:#c47f12; background:#fff4e6"></span> permanent</span>
+  </div>
+</section>
+
+<!-- 04 -->
+<section id="iac">
+  <div class="prose">
+    <div class="secnum">04 — CHAÎNE IaC & SÉQUENCE DE BOOTSTRAP</div>
+    <h2>Trois outils, trois responsabilités étanches</h2>
+    <p><strong>Terraform/OpenTofu</strong> dessine l'infra physique (VM, réseau, security groups, IPv4, application credential OpenStack, buckets S3). <strong>Ansible</strong> transforme des VM nues en cluster. <strong>ArgoCD</strong> peuple le cluster depuis Git. La reconstruction complète est rejouée à chaque session — c'est la leçon, pas une corvée.</p>
+  </div>
+  <div class="prose">
+    <div class="phase"><div class="n">1</div><div class="body"><h4>Terraform — l'infra</h4><p>1 VM control-plane + 2 workers, réseau privé, security groups, IPv4 flottante, credential OpenStack pour Cinder/Octavia, buckets S3.</p></div></div>
+    <div class="phase"><div class="n">2</div><div class="body"><h4>Ansible — le cluster</h4><p>containerd + paquets kube → <code>kubeadm init</code> (<code>--cloud-provider=external</code>, pod CIDR cohérent) → installation de Cilium → <code>kubeadm join</code> des workers.</p></div></div>
+    <div class="phase"><div class="n">3</div><div class="body"><h4>Intégration cloud</h4><p>Déploiement de <code>cloud-provider-openstack</code> : Cinder CSI (volumes) + Octavia OCCM (services <code>type: LoadBalancer</code>), creds injectés en secret.</p></div></div>
+    <div class="phase"><div class="n">4</div><div class="body"><h4>ArgoCD prend le relais</h4><p>Bootstrap d'ArgoCD, puis l'app-of-apps déploie tout le reste depuis le repo GitOps. Plus rien ne se fait à la main dans le cluster.</p></div></div>
+  </div>
+  <div class="callout prose">
+    <span class="tag">Responsabilités d'exploitation nouvelles</span>
+    etcd est désormais ton problème : <code>etcdctl snapshot save</code> vers S3 par cron, et un <strong>restore répété au moins une fois</strong>. Un <code>type: LoadBalancer</code> = un LB Octavia facturé → un seul LB d'ingress, tout le reste en ClusterIP.
+  </div>
+</section>
+
+<!-- 05 -->
+<section id="cicd">
+  <div class="prose">
+    <div class="secnum">05 — RÔLE DE LA CI/CD GITLAB</div>
+    <h2>La CI construit et vérifie. Elle ne déploie pas.</h2>
+    <p>La frontière est le principe de sécurité central : le déploiement est <strong>tiré</strong> par ArgoCD (pull-based). La CI ne reçoit jamais le kubeconfig du cluster. Son rôle s'arrête à produire un artefact signé et à mettre à jour le dépôt GitOps.</p>
+  </div>
+
+  <figure aria-label="Flux CI/CD et GitOps">
+    <svg viewBox="0 0 1180 420" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans',sans-serif">
+      <defs><marker id="c1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#13565c"/></marker></defs>
+      <rect width="1180" height="420" fill="#fff"/>
+      <!-- dev -->
+      <rect x="30" y="40" width="150" height="64" rx="10" fill="#f1ede4" stroke="#9aa0a6"/><text x="105" y="68" font-size="13" font-weight="700" fill="#1c2024" text-anchor="middle">Dev</text><text x="105" y="88" font-size="11" fill="#6b7280" text-anchor="middle">push / merge request</text>
+      <!-- CI lane -->
+      <rect x="30" y="140" width="800" height="150" rx="12" fill="#fff7ef" stroke="#c47f12" stroke-width="1.6"/>
+      <text x="48" y="164" font-size="13" font-weight="700" fill="#9a630a">Pipeline GitLab CI — build &amp; verify</text>
+      <g font-size="11" text-anchor="middle">
+        <rect x="48" y="182" width="118" height="86" rx="8" fill="#fff" stroke="#c47f12"/><text x="107" y="216" font-weight="700" fill="#1c2024">Test</text><text x="107" y="234" font-size="10" fill="#6b7280">lint · SAST</text><text x="107" y="248" font-size="10" fill="#6b7280">gitleaks</text>
+        <rect x="178" y="182" width="118" height="86" rx="8" fill="#fff" stroke="#c47f12"/><text x="237" y="216" font-weight="700" fill="#1c2024">Build</text><text x="237" y="234" font-size="10" fill="#6b7280">Kaniko/Buildah</text><text x="237" y="248" font-size="10" fill="#6b7280">rootless</text>
+        <rect x="308" y="182" width="118" height="86" rx="8" fill="#fff" stroke="#c47f12"/><text x="367" y="216" font-weight="700" fill="#1c2024">Scan</text><text x="367" y="234" font-size="10" fill="#6b7280">Trivy</text><text x="367" y="248" font-size="10" fill="#6b7280">SBOM (Syft)</text>
+        <rect x="438" y="182" width="118" height="86" rx="8" fill="#fff" stroke="#c47f12"/><text x="497" y="216" font-weight="700" fill="#1c2024">Sign</text><text x="497" y="234" font-size="10" fill="#6b7280">Cosign</text><text x="497" y="248" font-size="10" fill="#6b7280">attestation</text>
+        <rect x="568" y="182" width="118" height="86" rx="8" fill="#fff" stroke="#c47f12"/><text x="627" y="216" font-weight="700" fill="#1c2024">Push</text><text x="627" y="234" font-size="10" fill="#6b7280">registry</text><text x="627" y="248" font-size="10" fill="#6b7280">GitLab</text>
+        <rect x="698" y="182" width="118" height="86" rx="8" fill="#eef6ff" stroke="#2b5dd1"/><text x="757" y="210" font-weight="700" fill="#2b5dd1">Bump tag</text><text x="757" y="228" font-size="10" fill="#374151">commit/MR sur</text><text x="757" y="242" font-size="10" fill="#374151">repo GitOps</text>
+      </g>
+      <!-- gitops repo -->
+      <rect x="900" y="150" width="240" height="64" rx="10" fill="#eef6ff" stroke="#2b5dd1" stroke-width="1.6"/><text x="1020" y="178" font-size="13" font-weight="700" fill="#2b5dd1" text-anchor="middle">Repo GitOps</text><text x="1020" y="198" font-size="10.5" fill="#374151" text-anchor="middle">état désiré (Helm/Kustomize)</text>
+      <!-- argocd + cluster -->
+      <rect x="900" y="270" width="240" height="64" rx="10" fill="#d7f0e3" stroke="#0f7a45" stroke-width="1.6"/><text x="1020" y="298" font-size="13" font-weight="700" fill="#0f5c34" text-anchor="middle">ArgoCD (in-cluster)</text><text x="1020" y="318" font-size="10.5" fill="#374151" text-anchor="middle">reconcile l'état réel</text>
+      <rect x="900" y="356" width="240" height="44" rx="10" fill="#eafaf1" stroke="#0f7a45" stroke-dasharray="6 4"/><text x="1020" y="383" font-size="12" font-weight="700" fill="#0f7a45" text-anchor="middle">Cluster Kubernetes</text>
+
+      <!-- arrows -->
+      <path d="M105,104 L105,138" stroke="#13565c" stroke-width="1.6" marker-end="url(#c1)"/>
+      <path d="M816,225 L898,200" stroke="#13565c" stroke-width="1.6" marker-end="url(#c1)"/>
+      <path d="M1020,214 L1020,268" stroke="#13565c" stroke-width="1.6" marker-end="url(#c1)"/><text x="1034" y="246" font-size="10" fill="#13565c">pull</text>
+      <path d="M1020,334 L1020,354" stroke="#13565c" stroke-width="1.6" marker-end="url(#c1)"/>
+      <text x="430" y="378" font-size="11.5" font-style="italic" fill="#b03a2e" text-anchor="middle">La CI s'arrête au « bump tag ». Aucun accès cluster depuis le pipeline.</text>
+    </svg>
+    <figcaption><b>Fig. 2</b> — La CI (orange) produit un artefact signé et écrit l'état désiré dans le repo GitOps (bleu). ArgoCD (vert) tire ce dépôt et réconcilie le cluster. Push d'un côté, pull de l'autre.</figcaption>
+  </figure>
+
+  <div class="prose">
+    <ul>
+      <li><b>Build</b> rootless (Kaniko/Buildah), image taggée par SHA de commit.</li>
+      <li><b>Vérification</b> : lint, SAST, secret detection (gitleaks), dependency scanning.</li>
+      <li><b>Supply chain</b> : Trivy + SBOM (Syft) + signature Cosign — ce que Kyverno <code>verifyImages</code> exigera côté cluster.</li>
+      <li><b>Pipeline IaC séparé</b> : <code>terraform plan</code> en MR, <code>apply</code> derrière approbation manuelle, avec tfsec/checkov.</li>
+      <li><b>Handoff</b> : mise à jour du tag/values dans le repo GitOps ; ArgoCD synchronise.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 06 -->
+<section id="secrets">
+  <div class="prose">
+    <div class="secnum">06 — GESTION DES SECRETS</div>
+    <h2>Le fil conducteur de toute l'infra</h2>
+    <p>Les secrets traversent tout : la CI a besoin des creds registry et des clés de signature, le cluster des creds OpenStack, S3 et base de données, les apps de leurs tokens. On les centralise au lieu de les éparpiller. Progression en trois temps, du plus simple au plus puissant.</p>
+  </div>
+
+  <figure aria-label="Flux de gestion des secrets">
+    <svg viewBox="0 0 1180 400" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans',sans-serif">
+      <defs><marker id="s1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b4fd1"/></marker>
+      <marker id="s2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0f7a45"/></marker></defs>
+      <rect width="1180" height="400" fill="#fff"/>
+      <!-- vault -->
+      <rect x="40" y="120" width="250" height="170" rx="12" fill="#efeaff" stroke="#6b4fd1" stroke-width="1.8"/>
+      <text x="165" y="148" font-size="15" font-weight="700" fill="#5b3fc0" text-anchor="middle">HashiCorp Vault</text><text x="165" y="166" font-size="11" fill="#6b7280" text-anchor="middle">(ou OpenBao)</text>
+      <g font-size="11" text-anchor="middle" font-weight="600">
+        <rect x="58" y="180" width="100" height="34" rx="6" fill="#fff" stroke="#6b4fd1"/><text x="108" y="201" fill="#1c2024">KV statique</text>
+        <rect x="172" y="180" width="100" height="34" rx="6" fill="#fff" stroke="#6b4fd1"/><text x="222" y="201" fill="#1c2024">DB dynamique</text>
+        <rect x="58" y="222" width="100" height="34" rx="6" fill="#fff" stroke="#6b4fd1"/><text x="108" y="243" fill="#1c2024">PKI</text>
+        <rect x="172" y="222" width="100" height="34" rx="6" fill="#fff" stroke="#6b4fd1"/><text x="222" y="243" fill="#1c2024">transit</text>
+      </g>
+      <text x="165" y="278" font-size="10" fill="#6b7280" text-anchor="middle">auth méthode Kubernetes (ServiceAccount)</text>
+
+      <!-- ESO -->
+      <rect x="440" y="150" width="220" height="110" rx="12" fill="#d7f0e3" stroke="#0f7a45" stroke-width="1.8"/>
+      <text x="550" y="184" font-size="14" font-weight="700" fill="#0f5c34" text-anchor="middle">external-secrets</text><text x="550" y="204" font-size="11" fill="#374151" text-anchor="middle">operator (ESO)</text><text x="550" y="228" font-size="10.5" fill="#6b7280" text-anchor="middle">synchronise Vault → Secret k8s</text>
+
+      <!-- k8s secret -->
+      <rect x="780" y="150" width="180" height="110" rx="12" fill="#eafaf1" stroke="#0f7a45" stroke-dasharray="6 4"/>
+      <text x="870" y="190" font-size="13" font-weight="700" fill="#0f7a45" text-anchor="middle">Secret k8s</text><text x="870" y="210" font-size="10.5" fill="#374151" text-anchor="middle">monté dans le pod</text><text x="870" y="228" font-size="10" fill="#6b7280" text-anchor="middle">TTL court, rotation</text>
+
+      <!-- pod / db -->
+      <rect x="1010" y="120" width="140" height="80" rx="10" fill="#fff" stroke="#0f7a45"/><text x="1080" y="156" font-size="12.5" font-weight="700" fill="#1c2024" text-anchor="middle">Pod app</text><text x="1080" y="176" font-size="10" fill="#6b7280" text-anchor="middle">consomme le secret</text>
+      <rect x="1010" y="220" width="140" height="80" rx="10" fill="#fff" stroke="#6b4fd1"/><text x="1080" y="256" font-size="12.5" font-weight="700" fill="#5b3fc0" text-anchor="middle">CloudNativePG</text><text x="1080" y="276" font-size="10" fill="#6b7280" text-anchor="middle">user à la demande</text>
+
+      <!-- git (sealed/sops) -->
+      <rect x="40" y="40" width="430" height="52" rx="10" fill="#eef6ff" stroke="#2b5dd1"/><text x="255" y="64" font-size="12.5" font-weight="700" fill="#2b5dd1" text-anchor="middle">Niveaux 1–2 : sealed-secrets &amp; SOPS/age</text><text x="255" y="82" font-size="10.5" fill="#374151" text-anchor="middle">secrets chiffrés directement dans Git (déchiffrés en cluster / en CI)</text>
+
+      <path d="M290,205 L438,205" stroke="#0f7a45" stroke-width="1.8" marker-end="url(#s2)"/>
+      <path d="M660,205 L778,205" stroke="#0f7a45" stroke-width="1.8" marker-end="url(#s2)"/>
+      <path d="M960,190 L1008,165" stroke="#0f7a45" stroke-width="1.6" marker-end="url(#s2)"/>
+      <path d="M272,250 C600,330 850,300 1080,302" stroke="#6b4fd1" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#s1)"/>
+      <text x="640" y="322" font-size="10.5" font-style="italic" fill="#6b4fd1" text-anchor="middle">secret dynamique : Vault génère un user Postgres révoqué après usage</text>
+    </svg>
+    <figcaption><b>Fig. 3</b> — Niveaux 1–2 (bleu) pour démarrer : secrets chiffrés dans Git. Niveau 3, le cœur : Vault (violet) + external-secrets (vert) — jusqu'aux <b>secrets de base dynamiques</b> à durée de vie courte.</figcaption>
+  </figure>
+
+  <div class="prose">
+    <ul>
+      <li><b>Niveau 1 — sealed-secrets</b> : chiffrement dans le repo, GitOps-pur, zéro infra externe. Premier réflexe.</li>
+      <li><b>Niveau 2 — SOPS + age</b> : chiffrement des <code>values.yaml</code> et <code>tfvars</code>, déchiffrés par ArgoCD ou en CI.</li>
+      <li><b>Niveau 3 — Vault + external-secrets</b> : le vrai sujet. Secrets dynamiques (user DB à TTL court), moteur PKI (certs mTLS internes), transit (chiffrement-as-a-service), auth Kubernetes (un pod s'authentifie via son ServiceAccount, sans secret en dur).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 07 -->
+<section id="identite">
+  <div class="prose">
+    <div class="secnum">07 — GESTION DE L'IDENTITÉ (IAM)</div>
+    <h2>Keycloak, point d'autorité unique</h2>
+    <p>Après les secrets, l'identité est le second sujet transverse : un seul fournisseur, <strong>Keycloak</strong>, gouverne à la fois l'accès humain (SSO sur les outils) et l'accès au cluster lui-même. C'est un bénéfice direct du self-managed — on configure l'authentification OIDC <em>dans</em> l'apiserver, ce qu'un control plane en boîte noire ne permet généralement pas.</p>
+  </div>
+
+  <figure aria-label="Gestion de l'identité avec Keycloak">
+    <svg viewBox="0 0 1180 420" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans',sans-serif">
+      <defs>
+        <marker id="kcInk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1c2024"/></marker>
+        <marker id="kcPur" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b4fd1"/></marker>
+        <marker id="kcGrn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0f7a45"/></marker>
+      </defs>
+      <rect width="1180" height="420" fill="#fff"/>
+
+      <!-- Keycloak center -->
+      <rect x="486" y="118" width="208" height="142" rx="12" fill="#eef6ff" stroke="#2b5dd1" stroke-width="2"/>
+      <text x="590" y="150" font-size="16" font-weight="700" fill="#2b5dd1" text-anchor="middle">Keycloak</text>
+      <text x="590" y="172" font-size="11" fill="#374151" text-anchor="middle">Realm · Clients · Groupes</text>
+      <text x="590" y="190" font-size="11" fill="#374151" text-anchor="middle">OIDC / OAuth2 / SAML</text>
+      <rect x="506" y="206" width="168" height="34" rx="7" fill="#dfeefe" stroke="#2b5dd1"/>
+      <text x="590" y="228" font-size="11" font-weight="600" fill="#2b5dd1" text-anchor="middle">groupes → RBAC k8s</text>
+
+      <!-- left : SSO clients -->
+      <text x="130" y="52" font-size="12" font-weight="700" fill="#0f5c34" text-anchor="middle">SSO (OIDC) — outils</text>
+      <g font-size="12.5" font-weight="700" text-anchor="middle">
+        <rect x="40" y="66" width="180" height="52" rx="9" fill="#d7f0e3" stroke="#0f7a45"/><text x="130" y="97" fill="#0f5c34">Grafana</text>
+        <rect x="40" y="136" width="180" height="52" rx="9" fill="#d7f0e3" stroke="#0f7a45"/><text x="130" y="167" fill="#0f5c34">ArgoCD</text>
+        <rect x="40" y="206" width="180" height="52" rx="9" fill="#d7f0e3" stroke="#0f7a45"/><text x="130" y="237" fill="#0f5c34">Hubble UI</text>
+      </g>
+
+      <!-- right : cluster + apps -->
+      <rect x="930" y="64" width="210" height="66" rx="10" fill="#fdecec" stroke="#b03a2e" stroke-width="1.8"/>
+      <text x="1035" y="90" font-size="13" font-weight="700" fill="#b03a2e" text-anchor="middle">kube-apiserver</text>
+      <text x="1035" y="110" font-size="10.5" fill="#374151" text-anchor="middle">OIDC issuer · RBAC par groupe</text>
+
+      <rect x="930" y="152" width="210" height="56" rx="10" fill="#fff" stroke="#2b5dd1"/>
+      <text x="1035" y="176" font-size="12.5" font-weight="700" fill="#2b5dd1" text-anchor="middle">kubectl + kubelogin</text>
+      <text x="1035" y="194" font-size="10" fill="#6b7280" text-anchor="middle">jetons courts, pas de cert statique</text>
+
+      <rect x="930" y="230" width="210" height="64" rx="10" fill="#d7f0e3" stroke="#0f7a45"/>
+      <text x="1035" y="256" font-size="12.5" font-weight="700" fill="#0f5c34" text-anchor="middle">oauth2-proxy</text>
+      <text x="1035" y="274" font-size="10" fill="#374151" text-anchor="middle">forward-auth → apps non-OIDC</text>
+
+      <!-- deps -->
+      <rect x="428" y="300" width="156" height="58" rx="10" fill="#f0ecff" stroke="#6b4fd1"/>
+      <text x="506" y="326" font-size="12.5" font-weight="700" fill="#5b3fc0" text-anchor="middle">CloudNativePG</text>
+      <text x="506" y="344" font-size="10" fill="#6b7280" text-anchor="middle">état Keycloak</text>
+      <rect x="610" y="300" width="156" height="58" rx="10" fill="#efeaff" stroke="#6b4fd1"/>
+      <text x="688" y="326" font-size="12.5" font-weight="700" fill="#5b3fc0" text-anchor="middle">Vault</text>
+      <text x="688" y="344" font-size="10" fill="#6b7280" text-anchor="middle">secrets / clients</text>
+
+      <!-- arrows : sso -->
+      <path d="M220,92 C320,110 400,135 484,150" fill="none" stroke="#0f7a45" stroke-width="1.5" marker-end="url(#kcGrn)"/>
+      <path d="M220,162 C320,168 400,170 484,170" fill="none" stroke="#0f7a45" stroke-width="1.5" marker-end="url(#kcGrn)"/>
+      <path d="M220,232 C320,214 400,196 484,188" fill="none" stroke="#0f7a45" stroke-width="1.5" marker-end="url(#kcGrn)"/>
+      <text x="350" y="128" font-size="10.5" fill="#0f7a45">login OIDC</text>
+
+      <!-- arrows : cluster -->
+      <path d="M696,148 C800,120 860,104 928,97" fill="none" stroke="#1c2024" stroke-width="1.5" marker-end="url(#kcInk)"/>
+      <text x="800" y="118" font-size="10" fill="#1c2024">OIDC issuer</text>
+      <path d="M696,176 C800,176 860,178 928,180" fill="none" stroke="#1c2024" stroke-width="1.5" marker-end="url(#kcInk)"/>
+      <text x="800" y="168" font-size="10" fill="#1c2024">jeton</text>
+      <path d="M1035,152 L1035,132" fill="none" stroke="#1c2024" stroke-width="1.3" marker-end="url(#kcInk)"/>
+      <path d="M696,200 C800,230 860,250 928,258" fill="none" stroke="#1c2024" stroke-width="1.5" marker-end="url(#kcInk)"/>
+      <text x="800" y="248" font-size="10" fill="#1c2024">auth</text>
+
+      <!-- arrows : deps -->
+      <path d="M520,300 C540,282 552,272 566,262" fill="none" stroke="#6b4fd1" stroke-width="1.5" marker-end="url(#kcPur)"/>
+      <path d="M676,300 C656,282 640,272 624,262" fill="none" stroke="#6b4fd1" stroke-width="1.5" marker-end="url(#kcPur)"/>
+    </svg>
+    <figcaption><b>Fig. 4</b> — Keycloak (bleu) au centre : SSO OIDC pour les outils (gauche), authentification du cluster et des apps (droite). Adossé à CloudNativePG et à Vault (violet) — la boucle identité ↔ secrets se ferme.</figcaption>
+  </figure>
+
+  <div class="prose">
+    <ul>
+      <li><b>SSO plateforme</b> — Grafana, ArgoCD, Hubble UI derrière un seul login OIDC. Fini les comptes locaux par outil.</li>
+      <li><b>Accès au cluster (le gros gain self-managed)</b> — kube-apiserver configuré avec Keycloak comme issuer OIDC ; <code>kubectl</code> via le plugin <code>kubelogin</code> obtient des jetons courts. Les groupes Keycloak sont mappés sur le RBAC Kubernetes — fini les certs statiques dans le kubeconfig.</li>
+      <li><b>Apps non-OIDC</b> — <code>oauth2-proxy</code> en forward-auth (annotation ingress-nginx) place n'importe quel service derrière Keycloak sans le modifier.</li>
+      <li><b>Realm-as-code</b> — realm, clients et groupes versionnés via <code>terraform-provider-keycloak</code> ou <code>keycloak-config-cli</code>, recréés à chaque <code>apply</code> : cohérent avec le modèle éphémère.</li>
+      <li><b>Dépendances bouclées</b> — Keycloak s'adosse à CloudNativePG pour son état, et ses secrets (admin, client secrets) sont servis par Vault/external-secrets. Identité et secrets se renforcent.</li>
+    </ul>
+    <div class="callout">
+      <span class="tag">Pourquoi Keycloak ici, et non un service géré</span>
+      L'intérêt pédagogique est d'opérer le fournisseur et de câbler l'OIDC de l'apiserver à la main — les drapeaux <code>--oidc-issuer-url</code> et la map groupes→RBAC sont à toi. Keycloak étant gourmand, il démarre comme module « Identité » puis peut être promu vers le core dès que les nœuds le permettent.
+    </div>
+  </div>
+</section>
+
+<!-- 08 -->
+<section id="securite">
+  <div class="prose">
+    <div class="secnum">08 — SÉCURITÉ EN PROFONDEUR</div>
+    <h2>Défense par couches, du réseau au runtime</h2>
+    <ul>
+      <li><b>Réseau zero-trust</b> — default-deny par namespace, puis CiliumNetworkPolicy (filtrage L7 inclus). Hubble UI pour écrire les policies à partir du trafic réel observé.</li>
+      <li><b>Runtime eBPF</b> — Tetragon (natif Cilium, observe et applique) en premier ; Falco en complément pour la richesse de règles. Sonde eBPF moderne, pas de module kernel.</li>
+      <li><b>Admission policy-as-code</b> — Kyverno : interdiction du privileged/root, requests/limits obligatoires, registries restreints, et <code>verifyImages</code> (signatures Cosign).</li>
+      <li><b>Pod Security Admission</b> — mode <code>restricted</code> sur les namespaces applicatifs.</li>
+      <li><b>Supply chain bouclée</b> — trivy-operator scanne en continu les workloads qui tournent ; rien ne s'exécute sans avoir été scanné et signé en CI.</li>
+      <li><b>Posture</b> — kube-bench (CIS), durcissement OS des VM via Ansible.</li>
+    </ul>
+    <div class="callout">
+      <span class="tag">Limite assumée</span>
+      L'accès à la politique d'audit de l'apiserver dépend du control plane — mais ici <strong>tu opères le control plane</strong>, donc l'audit log et l'etcd sont entièrement à ta main. C'est précisément l'avantage du self-managed.
+    </div>
+  </div>
+</section>
+
+<!-- 09 -->
+<section id="exploitation">
+  <div class="prose">
+    <div class="secnum">09 — OBSERVABILITÉ & SCALING</div>
+    <h2>Voir, puis encaisser la charge</h2>
+    <h3>Observabilité 3 piliers</h3>
+    <p>kube-prometheus-stack (métriques + Grafana + Alertmanager), Loki (logs), Tempo + OpenTelemetry Collector (traces). Alertmanager route vers mail/kChat. Les logs Falco et l'audit partent dans Loki pour un SIEM léger.</p>
+    <h3>Scaling horizontal — trois niveaux</h3>
+    <ul>
+      <li><b>Pods</b> — HPA (CPU/RAM via metrics-server), puis KEDA pour l'event-driven (scale sur une query Prometheus ou une file, jusqu'au scale-to-zero).</li>
+      <li><b>Nœuds, manuel/IaC</b> — bump du compte de workers en Terraform → <code>kubeadm join</code>. On <em>voit</em> le nœud rejoindre : plus instructif qu'un autoscaler opaque pour débuter.</li>
+      <li><b>Nœuds, automatique</b> — Cluster API (CAPI) + cluster-autoscaler, l'étape avancée une fois le bootstrap maîtrisé.</li>
+    </ul>
+    <p>Résilience pendant le scale : PodDisruptionBudget, topologySpreadConstraints multi-zone, anti-affinity.</p>
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="modules">
+  <div class="prose">
+    <div class="secnum">10 — APPROCHE « CORE + MODULES »</div>
+    <h2>Tout n'a pas à tourner en même temps</h2>
+    <p>Deux petits workers ne peuvent pas héberger simultanément Vault, Keycloak, le mesh, l'observabilité complète et les apps. On distingue un <strong>socle léger toujours déployé</strong> et des <strong>modules thématiques</strong> qu'on allume à la séance (en montant les nœuds le temps voulu). Chaque module est un dossier du repo GitOps activé par un flag — ce qui est, en soi, un exercice GitOps.</p>
+  </div>
+
+  <figure aria-label="Core et modules togglables">
+    <svg viewBox="0 0 1180 440" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans',sans-serif">
+      <rect width="1180" height="440" fill="#fff"/>
+      <!-- core -->
+      <rect x="40" y="40" width="1100" height="150" rx="12" fill="#eafaf1" stroke="#0f7a45" stroke-width="1.8"/>
+      <text x="60" y="66" font-size="14" font-weight="700" fill="#0f5c34">● Core permanent (léger, toujours déployé)</text>
+      <g font-size="11.5" font-weight="600" text-anchor="middle" fill="#0f5c34">
+        <rect x="60" y="84" width="150" height="42" rx="8" fill="#fff" stroke="#0f7a45"/><text x="135" y="110">ingress + cert-manager</text>
+        <rect x="222" y="84" width="150" height="42" rx="8" fill="#fff" stroke="#0f7a45"/><text x="297" y="110">externalDNS</text>
+        <rect x="384" y="84" width="150" height="42" rx="8" fill="#fff" stroke="#0f7a45"/><text x="459" y="110">Cilium + Hubble</text>
+        <rect x="546" y="84" width="150" height="42" rx="8" fill="#fff" stroke="#0f7a45"/><text x="621" y="110">ArgoCD</text>
+        <rect x="708" y="84" width="190" height="42" rx="8" fill="#fff" stroke="#0f7a45"/><text x="803" y="110">Prometheus + Loki</text>
+        <rect x="910" y="84" width="210" height="42" rx="8" fill="#fff" stroke="#0f7a45"/><text x="1015" y="110">Vault + external-secrets</text>
+        <rect x="60" y="134" width="150" height="42" rx="8" fill="#fff" stroke="#0f7a45"/><text x="135" y="160">app de démo</text>
+      </g>
+      <!-- modules -->
+      <text x="60" y="232" font-size="14" font-weight="700" fill="#b03a2e">▦ Modules à la séance (allumés au besoin)</text>
+      <g font-size="12" font-weight="700" text-anchor="middle">
+        <rect x="60" y="250" width="200" height="74" rx="10" fill="#fdecec" stroke="#b03a2e"/><text x="160" y="282" fill="#b03a2e">Sécurité runtime</text><text x="160" y="302" font-size="10" font-weight="400" fill="#374151">Tetragon · Falco · Trivy</text>
+        <rect x="276" y="250" width="200" height="74" rx="10" fill="#eef6ff" stroke="#2b5dd1"/><text x="376" y="282" fill="#2b5dd1">Identité</text><text x="376" y="302" font-size="10" font-weight="400" fill="#374151">Keycloak · OIDC · SSO</text>
+        <rect x="492" y="250" width="200" height="74" rx="10" fill="#eef6ff" stroke="#2b5dd1"/><text x="592" y="282" fill="#2b5dd1">Mesh</text><text x="592" y="302" font-size="10" font-weight="400" fill="#374151">Cilium mesh (sans sidecar)</text>
+        <rect x="708" y="250" width="200" height="74" rx="10" fill="#f0ecff" stroke="#6b4fd1"/><text x="808" y="282" fill="#5b3fc0">DR</text><text x="808" y="302" font-size="10" font-weight="400" fill="#374151">Velero → S3</text>
+        <rect x="924" y="250" width="196" height="74" rx="10" fill="#eafaf1" stroke="#0f7a45"/><text x="1022" y="282" fill="#0f5c34">Scaling</text><text x="1022" y="302" font-size="10" font-weight="400" fill="#374151">KEDA · broker · charge</text>
+        <rect x="60" y="338" width="200" height="74" rx="10" fill="#fff7ef" stroke="#c47f12"/><text x="160" y="370" fill="#9a630a">Supply chain</text><text x="160" y="390" font-size="10" font-weight="400" fill="#374151">Cosign · Kyverno verify</text>
+        <rect x="276" y="338" width="200" height="74" rx="10" fill="#fff7ef" stroke="#c47f12"/><text x="376" y="370" fill="#9a630a">Cost</text><text x="376" y="390" font-size="10" font-weight="400" fill="#374151">OpenCost / kubecost</text>
+        <rect x="492" y="338" width="200" height="74" rx="10" fill="#eef6ff" stroke="#2b5dd1"/><text x="592" y="370" fill="#2b5dd1">Progressive delivery</text><text x="592" y="390" font-size="10" font-weight="400" fill="#374151">Argo Rollouts (canary)</text>
+        <rect x="708" y="338" width="200" height="74" rx="10" fill="#f6f8fa" stroke="#9aa0a6"/><text x="808" y="366" fill="#3a3f45">Observabilité+</text><text x="808" y="386" font-size="10" font-weight="400" fill="#374151">Tempo · OTel · traces</text>
+        <rect x="924" y="338" width="196" height="74" rx="10" fill="#eef6ff" stroke="#2b5dd1"/><text x="1022" y="366" fill="#2b5dd1">Agentique</text><text x="1022" y="386" font-size="10" font-weight="400" fill="#374151">MCP · A2A sécurisés</text>
+      </g>
+    </svg>
+    <figcaption><b>Fig. 5</b> — Un socle léger permanent (vert) ; des modules thématiques activables par flag GitOps (par couleur de domaine). On dimensionne les nœuds par type de session via des profils <code>tfvars</code>.</figcaption>
+  </figure>
+
+  <h3 class="prose" style="max-width:none">Catalogue d'idées à héberger</h3>
+  <div class="grid">
+    <div class="card"><div class="role">stateful</div><h4>App 3-tiers</h4><p>Front + API + Postgres (CloudNativePG) : ingress, DB, secrets dynamiques, HPA.</p></div>
+    <div class="card"><div class="role">event-driven</div><h4>Broker + worker</h4><p>NATS/RabbitMQ + worker → démo KEDA, scale-to-zero sur la profondeur de file.</p></div>
+    <div class="card"><div class="role">storage</div><h4>App orientée S3</h4><p>Uploads vers l'Object Storage → exerce les creds S3 via Vault/external-secrets.</p></div>
+    <div class="card"><div class="role">batch</div><h4>CronJob</h4><p>Sauvegardes, rapports planifiés → primitives Job/CronJob.</p></div>
+    <div class="card"><div class="role">live</div><h4>Status page</h4><p>Uptime-Kuma exposé en HTTPS : un service public « vivant » à montrer.</p></div>
+    <div class="card"><div class="role">identité</div><h4>SSO Keycloak</h4><p>Realm Keycloak : OIDC/SSO sur Grafana, ArgoCD, <code>kubectl</code> et les apps via oauth2-proxy. Détail en §07.</p></div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="agentique">
+  <div class="prose">
+    <div class="secnum">11 — COUCHE AGENTIQUE (MCP &amp; A2A SÉCURISÉS)</div>
+    <h2>Faire tourner des agents sans ouvrir de brèche</h2>
+    <p>C'est là que la plateforme paie. MCP (serveurs d'outils pour LLM) et A2A (communication agent-à-agent) ont tous deux été pensés <strong>pour la communication, pas pour la sécurité</strong> : ils délèguent l'authentification à l'implémenteur. Nos briques existantes — Keycloak, Vault, le maillage Cilium, la stack runtime — sont précisément ce qui ferme ces trous. On ne réinvente rien, on réutilise.</p>
+    <p>État courant (vérifié, mi-2026) : les serveurs MCP sont désormais des <strong>Resource Servers OAuth 2.1</strong>, qui publient leur Authorization Server via Protected Resource Metadata (RFC 9728) et exigent côté client les Resource Indicators (RFC 8707). A2A, lui, traite les agents comme des applications d'entreprise, l'identité vivant au niveau du transport HTTP, jamais dans la charge utile ni dans l'Agent Card.</p>
+  </div>
+
+  <figure aria-label="Couche agentique sécurisée MCP et A2A">
+    <svg viewBox="0 0 1180 480" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans',sans-serif">
+      <defs>
+        <marker id="agK" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1c2024"/></marker>
+        <marker id="agB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2b5dd1"/></marker>
+        <marker id="agP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b4fd1"/></marker>
+      </defs>
+      <rect width="1180" height="480" fill="#fff"/>
+
+      <!-- authorities left -->
+      <rect x="36" y="44" width="244" height="64" rx="11" fill="#eef6ff" stroke="#2b5dd1" stroke-width="1.8"/>
+      <text x="158" y="72" font-size="14" font-weight="700" fill="#2b5dd1" text-anchor="middle">Keycloak</text>
+      <text x="158" y="92" font-size="10.5" fill="#374151" text-anchor="middle">Authorization Server OAuth 2.1 / OIDC</text>
+
+      <rect x="36" y="150" width="244" height="86" rx="11" fill="#efeaff" stroke="#6b4fd1" stroke-width="1.8"/>
+      <text x="158" y="178" font-size="14" font-weight="700" fill="#5b3fc0" text-anchor="middle">Vault</text>
+      <text x="158" y="198" font-size="10.5" fill="#374151" text-anchor="middle">PKI : Agent Cards signées, mTLS</text>
+      <text x="158" y="214" font-size="10.5" fill="#374151" text-anchor="middle">jetons courts (TTL) · rotation</text>
+
+      <rect x="36" y="276" width="244" height="74" rx="11" fill="#f6f8fa" stroke="#9aa0a6"/>
+      <text x="158" y="302" font-size="11.5" font-weight="700" fill="#3a3f45" text-anchor="middle">Découverte &amp; jetons</text>
+      <text x="158" y="320" font-size="10" fill="#374151" text-anchor="middle">RFC 9728 (resource metadata)</text>
+      <text x="158" y="335" font-size="10" fill="#374151" text-anchor="middle">RFC 8707 (resource indicators)</text>
+
+      <!-- mesh -->
+      <rect x="312" y="36" width="556" height="412" rx="13" fill="#eafaf1" stroke="#0f7a45" stroke-width="1.8" stroke-dasharray="8 5"/>
+      <text x="330" y="60" font-size="12.5" font-weight="700" fill="#0f7a45">Maillage Cilium — mTLS sans sidecar · NetworkPolicy L7 (egress allowlist)</text>
+
+      <rect x="336" y="84" width="206" height="116" rx="10" fill="#fff" stroke="#2b5dd1" stroke-width="1.6"/>
+      <text x="439" y="128" font-size="13.5" font-weight="700" fill="#2b5dd1" text-anchor="middle">Agent orchestrateur</text>
+      <text x="439" y="148" font-size="10.5" fill="#374151" text-anchor="middle">client MCP + A2A</text>
+      <text x="439" y="166" font-size="10.5" fill="#6b7280" text-anchor="middle">(LLM)</text>
+
+      <rect x="578" y="84" width="266" height="50" rx="9" fill="#fff7ef" stroke="#c47f12"/>
+      <text x="711" y="104" font-size="12" font-weight="700" fill="#9a630a" text-anchor="middle">MCP server · outil interne</text>
+      <text x="711" y="122" font-size="9.5" fill="#374151" text-anchor="middle">OAuth 2.1 Resource Server</text>
+      <rect x="578" y="144" width="266" height="50" rx="9" fill="#fff7ef" stroke="#c47f12"/>
+      <text x="711" y="164" font-size="12" font-weight="700" fill="#9a630a" text-anchor="middle">MCP server · données</text>
+      <text x="711" y="182" font-size="9.5" fill="#374151" text-anchor="middle">bearer token validé · scope limité</text>
+
+      <rect x="578" y="232" width="266" height="62" rx="9" fill="#fff" stroke="#2b5dd1"/>
+      <text x="711" y="258" font-size="12.5" font-weight="700" fill="#2b5dd1" text-anchor="middle">Agent distant (A2A)</text>
+      <text x="711" y="277" font-size="9.5" fill="#374151" text-anchor="middle">Agent Card signée · creds hors card</text>
+
+      <rect x="336" y="330" width="508" height="98" rx="10" fill="#fdecec" stroke="#b03a2e"/>
+      <text x="590" y="354" font-size="12" font-weight="700" fill="#b03a2e" text-anchor="middle">Confinement runtime</text>
+      <text x="590" y="375" font-size="10.5" fill="#374151" text-anchor="middle">Tetragon/Falco surveillent les exec (les agents lancent du code généré)</text>
+      <text x="590" y="392" font-size="10.5" fill="#374151" text-anchor="middle">Kyverno + PSA restricted confinent les workloads · images MCP signées</text>
+      <text x="590" y="412" font-size="10.5" fill="#374151" text-anchor="middle">default-deny egress : un agent ne joint que les endpoints autorisés</text>
+
+      <!-- egress + external right -->
+      <rect x="904" y="150" width="240" height="58" rx="10" fill="#fff" stroke="#0f7a45"/>
+      <text x="1024" y="174" font-size="12.5" font-weight="700" fill="#0f5c34" text-anchor="middle">Egress gateway</text>
+      <text x="1024" y="192" font-size="10" fill="#374151" text-anchor="middle">allowlist L7</text>
+      <rect x="904" y="248" width="240" height="62" rx="10" fill="#f1ede4" stroke="#9aa0a6"/>
+      <text x="1024" y="274" font-size="12.5" font-weight="700" fill="#3a3f45" text-anchor="middle">🌐 API LLM / MCP tiers</text>
+      <text x="1024" y="292" font-size="10" fill="#6b7280" text-anchor="middle">hors cluster</text>
+
+      <!-- arrows -->
+      <path d="M280,76 C300,82 314,98 334,120" stroke="#2b5dd1" stroke-width="1.5" fill="none" marker-end="url(#agB)"/>
+      <text x="286" y="108" font-size="9.5" fill="#2b5dd1">jetons OIDC</text>
+      <path d="M280,192 C300,182 316,156 412,140" stroke="#6b4fd1" stroke-width="1.5" fill="none" marker-end="url(#agP)"/>
+      <text x="290" y="160" font-size="9.5" fill="#6b4fd1">certs / jetons</text>
+
+      <path d="M542,120 L576,112" stroke="#1c2024" stroke-width="1.5" fill="none" marker-end="url(#agK)"/>
+      <text x="556" y="100" font-size="9" fill="#1c2024" text-anchor="middle">Bearer OAuth 2.1 + RFC 8707</text>
+      <path d="M542,150 L576,165" stroke="#1c2024" stroke-width="1.5" fill="none" marker-end="url(#agK)"/>
+      <path d="M470,200 C500,250 540,258 576,262" stroke="#1c2024" stroke-width="1.5" fill="none" marker-end="url(#agK)"/>
+      <text x="520" y="240" font-size="9" fill="#1c2024">A2A : mTLS + JWT</text>
+
+      <path d="M844,110 C876,120 884,150 902,162" stroke="#1c2024" stroke-width="1.5" fill="none" marker-end="url(#agK)"/>
+      <text x="876" y="138" font-size="9" fill="#1c2024">egress contrôlé</text>
+      <path d="M1024,208 L1024,246" stroke="#1c2024" stroke-width="1.5" fill="none" marker-end="url(#agK)"/>
+    </svg>
+    <figcaption><b>Fig. 6</b> — Couche agentique posée sur la plateforme. Keycloak authentifie agents et serveurs MCP (OAuth 2.1) ; Vault signe les Agent Cards et fournit les jetons courts ; le maillage Cilium impose mTLS et une allowlist d'egress. Aucune nouvelle autorité.</figcaption>
+  </figure>
+
+  <div class="prose">
+    <ul>
+      <li><b>Une seule autorité</b> — Keycloak (§07) sert d'Authorization Server OAuth 2.1/OIDC pour MCP (serveurs = Resource Servers, découverte RFC 9728) <em>et</em> pour A2A (agents authentifiés comme apps, JWT). Humains et agents partagent le même IdP.</li>
+      <li><b>Jetons courts + rotation</b> — le cœur MCP ne mandate pas le cycle de vie des bearer tokens (gap signalé par la note de sécurité NSA de mai 2026 : risque de rejeu/hijack). Vault émet des jetons à TTL court et scoping serré ; RFC 8707 côté client évite le détournement de token entre serveurs.</li>
+      <li><b>A2A « sécurisé »</b> — le protocole ne vérifie pas l'authenticité des Agent Cards. On ajoute mTLS (Cilium mesh, sans sidecar), Agent Cards signées (PKI Vault), validation du contenu des cards (anti context-poisoning), et creds toujours hors de la card.</li>
+      <li><b>Confinement réseau</b> — default-deny egress + allowlist L7 Cilium par namespace d'agent : un MCP server ou un agent ne joint que les endpoints autorisés (anti-exfiltration, anti-SSRF), via une egress gateway.</li>
+      <li><b>Runtime &amp; supply chain</b> — Tetragon/Falco surveillent les exec (un agent exécute des appels d'outils et du code généré), Kyverno + PSA restricted confinent les workloads, et les images de serveurs MCP sont scannées et signées comme le reste.</li>
+      <li><b>Scaling</b> — le cœur MCP devient stateless (RC 2026) : scale horizontal derrière l'ingress avec HPA/KEDA. Le tracing Tempo/OTel suit les chaînes d'appels d'agents.</li>
+    </ul>
+    <div class="callout">
+      <span class="tag">À ne pas survendre</span>
+      L'infra ferme les trous d'<strong>authentification et de confinement</strong>. Elle ne neutralise pas l'<strong>injection de prompt</strong> via le contenu d'un outil ou d'une donnée — le risque le plus dur, en partie hors périmètre infra. On le réduit par des scopes au plus juste, un humain dans la boucle pour les actions sensibles, et l'allowlist d'egress. Aucune brique ne dispense de cette prudence.
+    </div>
+  </div>
+</section>
+
+<!-- 12 -->
+<section id="budget">
+  <div class="prose">
+    <div class="secnum">12 — BUDGET & DISCIPLINE</div>
+    <h2>Estimation et garde-fous</h2>
+    <ul>
+      <li><b>Socle permanent</b> — VM GitLab (~CHF 16/mois) + Block Storage + IPv4 + S3 ≈ <b>CHF 20–25/mois</b>, incompressible.</li>
+      <li><b>Cluster éphémère</b> — control plane + workers facturés <em>uniquement allumés</em> ; ~4 h × ~12 séances ≈ <b>CHF 5–10/mois</b>.</li>
+      <li><b>Total ≈ CHF 30–35/mois</b> → ~CHF 100 sur 3 mois. Un seul crédit CHF 300 couvre les deux personnes.</li>
+    </ul>
+    <div class="callout">
+      <span class="tag">Garde-fou n°1</span>
+      <code>terraform destroy</code> en fin de séance, scripté dans un Makefile et accompagné d'un rappel. C'est là que se jouent 90 % des dépassements de crédit, jamais dans le dimensionnement.
+    </div>
+  </div>
+</section>
+
+<!-- 13 -->
+<section id="roadmap" style="border-bottom:none">
+  <div class="prose">
+    <div class="secnum">13 — ROADMAP D'APPRENTISSAGE</div>
+    <h2>Par paliers, du plomb à l'or</h2>
+    <div class="phase"><div class="n">1</div><div class="body"><h4>Socle reproductible</h4><p>Terraform + Ansible : bootstrap kubeadm, Cilium, intégration OpenStack, ArgoCD. Objectif : <code>apply</code>/<code>destroy</code> propre et idempotent.</p></div></div>
+    <div class="phase"><div class="n">2</div><div class="body"><h4>Chaîne livraison</h4><p>CI GitLab build→scan→sign→push, handoff GitOps, première app déployée par ArgoCD. sealed-secrets pour démarrer.</p></div></div>
+    <div class="phase"><div class="n">3</div><div class="body"><h4>Secrets & sécurité</h4><p>Vault + external-secrets, secrets dynamiques DB, Kyverno verifyImages, Tetragon/Falco, NetworkPolicies default-deny.</p></div></div>
+    <div class="phase"><div class="n">4</div><div class="body"><h4>Exploitation & charge</h4><p>Observabilité 3 piliers, HPA/KEDA, scaling de nœuds manuel, Velero (backup/restore), etcd snapshot/restore.</p></div></div>
+    <div class="phase"><div class="n">5</div><div class="body"><h4>Avancé</h4><p>Cluster API + autoscaler, Cilium mesh, SSO Keycloak, progressive delivery (Argo Rollouts), OpenCost, et la couche agentique MCP/A2A sécurisée par-dessus.</p></div></div>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <p style="max-width:760px">Données Infomaniak (crédit CHF 300 / 3 mois, base OpenStack, CNI Cilium, control plane mutualisé gratuit côté offre managée, programme étudiant hors Public Cloud) vérifiées sur infomaniak.com et leur documentation, juin 2026. Tarifs hors TVA, à reconfirmer dans le Manager au moment du provisioning — les offres cloud évoluent vite.</p>
+    <p class="mono" style="color:#9a8f7a">Dossier de projet · lab éducatif · v1</p>
+  </div>
+</footer>
+
+</body>
+</html>
