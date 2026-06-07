@@ -43,11 +43,14 @@ It does two things:
 
 ## Weekly workflow
 
-1. Edit `plan/index.html` (or add more files under `plan/`, e.g.
+1. Branch off `main` and edit `plan/index.html` (or add a dated snapshot like
    `plan/2026-w27.html`).
-2. Commit and push.
-3. The Action posts a changelog to Discord within a minute or two.
+2. Open a PR — the bot comments an **AI preview** of the changes for review.
+3. Merge to `main` — the **canonical changelog** posts to Discord.
 4. Discuss in Discord with `/ask`, `/idea`, `/poll`. Decisions become `/todo`s.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full flow and how to protect
+`main` so edits go through PRs.
 
 ## Setup (one-time)
 
@@ -72,6 +75,10 @@ French, Discord-ready changelog with a "🧠 À débattre" section of open quest
 SVG diagrams and styling are stripped first (`lib/html.mjs`) so the model sees the
 prose, and cosmetic-only edits are skipped. No API key → deterministic structural
 diff fallback, so the pipeline never hard-fails.
+
+The workflow runs on **pull requests** (posts the summary as a PR comment +
+Actions run summary) and on **push to `main`** (posts to Discord) — so PRs get a
+review preview and Discord gets one clean post per landed change.
 
 ## Local development
 

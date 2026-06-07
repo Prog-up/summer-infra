@@ -1,14 +1,23 @@
 name: Plan update → Discord
 
-# Summarises plan changes and posts them to Discord on every push that
-# touches the plan/ folder. Configure two repo secrets:
+# Summarises plan changes. On a pull request it posts a preview comment; on a
+# push to main it posts the canonical changelog to Discord. Configure two repo
+# secrets:
 #   DISCORD_WEBHOOK_URL  — a channel webhook (Server Settings → Integrations)
 #   ANTHROPIC_API_KEY    — optional; enables AI summaries instead of a raw diff
 on:
   push:
+    branches: [main]
+    paths:
+      - "plan/**.html"
+  pull_request:
     paths:
       - "plan/**.html"
   workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pull-requests: write # to post the preview comment on PRs
 
 jobs:
   summarize:
@@ -28,11 +37,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Summarise plan changes and post to Discord
+      - name: Summarise plan changes
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          BEFORE_SHA: ${{ github.event.before }}
-          AFTER_SHA: ${{ github.sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # For PRs, diff the base..head of the PR; for pushes, before..after.
+          BEFORE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          AFTER_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}
         run: node scripts/summarize-push.mjs
