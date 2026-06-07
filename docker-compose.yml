@@ -1,0 +1,21 @@
+# Run the Discord bot with a persistent volume for /idea and /todo data.
+#   cp bot/.env.example bot/.env   # fill it in
+#   docker compose up -d --build
+#   docker compose logs -f
+#
+# To (re)register slash commands after changing them:
+#   docker compose run --rm bot node bot/src/deploy-commands.mjs
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - bot/.env
+    volumes:
+      # Persist the JSON store across restarts/rebuilds.
+      - bot-data:/app/bot/data
+
+volumes:
+  bot-data:

@@ -51,6 +51,15 @@ docker build -f bot/Dockerfile -t summer-infra-bot .
 docker run --env-file bot/.env -v "$PWD/bot/data:/app/bot/data" summer-infra-bot
 ```
 
+Or with Compose (persistent volume, auto-restart) from the repo root:
+
+```bash
+docker compose up -d --build
+docker compose logs -f
+# register/refresh slash commands:
+docker compose run --rm bot node bot/src/deploy-commands.mjs
+```
+
 ## Notes
 
 - `/idea` and `/todo` persist to `bot/data/store.json`. On an ephemeral host
